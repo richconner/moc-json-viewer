@@ -7,60 +7,55 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --panel-bg: #16171d;
+            --accent: #ffcc00;
+        }
         body { 
-            background-color: #0d0d0f; 
-            color: #e2e8f0; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-image: radial-gradient(circle at center, #1a1a2e 0%, #0d0d0f 100%);
-            min-height: 100vh;
+            background-color: var(--bg-color); 
+            color: #d1d5db; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
-        .retro-font { font-family: 'Press Start 2P', cursive; }
-        .gold-glow { text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-        .table-container {
-            background: rgba(17, 24, 39, 0.8);
-            backdrop-filter: blur(10px);
-        }
-        tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
-        tr:hover { background-color: rgba(251, 191, 36, 0.05); }
+        .retro-text { font-family: 'Press Start 2P', cursive; }
+        .gold-glow { text-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
+        .border-gold { border-color: rgba(255, 204, 0, 0.2); }
         
-        /* Custom scrollbar for that classic look */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0d0d0f; }
-        ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 4px; }
+        /* Custom Table Styling */
+        .moc-table thead { background: rgba(255, 255, 255, 0.03); }
+        .moc-table tr { border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s; }
+        .moc-table tr:hover { background: rgba(255, 204, 0, 0.03); }
     </style>
 </head>
-<body class="p-4 md:p-12">
+<body class="min-h-screen p-4 sm:p-8">
 
     <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="retro-font text-2xl md:text-3xl text-yellow-500 mb-4 gold-glow">
-                HALL OF FAME
+        <div class="text-center mb-12">
+            <h1 class="retro-text text-xl md:text-3xl text-yellow-500 mb-4 gold-glow italic">
+                LEADERBOARD
             </h1>
-            <div class="flex items-center justify-center space-x-4">
-                <span class="h-px w-12 bg-yellow-900"></span>
-                <p class="text-gray-500 text-xs tracking-[0.3em] uppercase">Mirage Online Classic</p>
-                <span class="h-px w-12 bg-yellow-900"></span>
-            </div>
-        </header>
+            <p class="text-gray-500 text-xs tracking-widest uppercase">Official Rankings • Mirage Online Classic</p>
+        </div>
 
-        <div class="table-container border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
-            <div id="status-message" class="p-20 text-center">
-                <div class="inline-block animate-spin mb-4">
-                    <svg class="w-8 h-8 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <p class="retro-font text-[10px] text-yellow-600 tracking-widest">Querying Realm Data...</p>
+        <div class="bg-[#16171d] rounded-xl border border-gray-800 shadow-2xl overflow-hidden">
+            
+            <div id="loader" class="p-20 text-center">
+                <div class="inline-block w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="retro-text text-[10px] text-gray-500">Fetching Player Data...</p>
             </div>
 
-            <table id="leaderboard-table" class="w-full text-left hidden">
-                <thead class="bg-gray-800/50 text-yellow-500 text-[10px] uppercase tracking-wider">
-                    <tr>
-                        <th class="px-6 py-5 font-bold">Rank</th>
-                        <th class="px-6 py-5 font-bold">Adventurer</th>
-                        <th class="px-6 py-5 font-bold">Level</th>
-                        <th class="px-6 py-5 font-bold text-right">Experience</th>
+            <div id="error-box" class="hidden p-10 text-center">
+                <p class="text-red-400 mb-4">Failed to connect to play.mirageonlineclassic.com</p>
+                <button onclick="window.location.reload()" class="px-6 py-2 bg-yellow-600 text-black font-bold rounded hover:bg-yellow-500 transition">RETRY CONNECTION</button>
+            </div>
+
+            <table id="leaderboard-table" class="w-full text-left hidden moc-table">
+                <thead>
+                    <tr class="text-yellow-500 text-[10px] uppercase tracking-wider font-bold">
+                        <th class="px-6 py-4"># Rank</th>
+                        <th class="px-6 py-4">Adventurer</th>
+                        <th class="px-6 py-4">Level</th>
+                        <th class="px-6 py-4 text-right">EXP</th>
                     </tr>
                 </thead>
                 <tbody id="leaderboard-body" class="text-sm">
@@ -68,63 +63,48 @@
             </table>
         </div>
 
-        <footer class="mt-8 text-center">
-            <p class="text-gray-600 text-[10px] uppercase tracking-tighter">
-                Live data synced from play.mirageonlineclassic.com
-            </p>
-        </footer>
+        <div class="mt-6 text-center">
+            <a href="https://play.mirageonlineclassic.com" class="text-gray-600 hover:text-yellow-500 text-xs transition uppercase tracking-tighter">
+                Back to World Designer Tools
+            </a>
+        </div>
     </div>
 
     <script>
-        // Using a different proxy approach (Corsproxy.io is often faster for direct GETs)
-        const TARGET_URL = 'https://play.mirageonlineclassic.com/leaderboard.json';
-        const PROXY_URL = 'https://corsproxy.io/?' + encodeURIComponent(TARGET_URL);
+        /**
+         * DEVELOPER NOTE: 
+         * Using a 'Cloudflare Worker' style proxy to bypass local browser CORS blocks.
+         */
+        const DATA_URL = 'https://play.mirageonlineclassic.com/leaderboard.json';
+        const PROXY = 'https://api.allorigins.win/get?url=' + encodeURIComponent(DATA_URL);
 
-        async function loadLeaderboard() {
-            const status = document.getElementById('status-message');
+        async function initLeaderboard() {
             const table = document.getElementById('leaderboard-table');
+            const loader = document.getElementById('loader');
+            const errorBox = document.getElementById('error-box');
             const tbody = document.getElementById('leaderboard-body');
 
             try {
-                const response = await fetch(PROXY_URL);
+                const response = await fetch(PROXY);
+                if (!response.ok) throw new Error('Proxy unreachable');
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Sort by level (assuming key is 'level')
-                // If your JSON uses 'lv' or 'Level', change this key.
-                data.sort((a, b) => (b.level || 0) - (a.level || 0));
+                const wrapper = await response.json();
+                // Extracting the actual JSON data from the proxy wrapper
+                const players = JSON.parse(wrapper.contents);
 
+                // Sort by level (highest first)
+                players.sort((a, b) => (b.level || 0) - (a.level || 0));
+
+                // Clear and build rows
                 tbody.innerHTML = '';
-                
-                data.forEach((player, index) => {
-                    const isTopThree = index < 3;
-                    const rankColor = index === 0 ? 'text-yellow-400' : 
-                                    index === 1 ? 'text-gray-300' : 
-                                    index === 2 ? 'text-orange-500' : 'text-gray-600';
+                players.forEach((player, index) => {
+                    const rank = index + 1;
+                    const row = document.createElement('tr');
+                    
+                    // Formatting columns
+                    const rankClass = rank === 1 ? 'text-yellow-400 font-bold' : (rank <= 3 ? 'text-gray-300' : 'text-gray-600');
+                    const expDisplay = player.exp ? Number(player.exp).toLocaleString() : '0';
 
-                    const row = `
-                        <tr class="border-b border-gray-800/50 transition-all">
-                            <td class="px-6 py-4 font-mono font-bold ${rankColor}">
-                                ${isTopThree ? '★' : ''} #${index + 1}
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col">
-                                    <span class="font-bold text-gray-100">${player.name || player.username || 'Unknown'}</span>
-                                    <span class="text-[10px] uppercase text-gray-500 tracking-tighter italic">${player.profession || 'Player'}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="bg-gray-800 text-yellow-500 border border-yellow-900/50 px-3 py-1 rounded-full text-xs font-bold">
-                                    Lv. ${player.level || 0}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-right font-mono text-gray-400 text-xs">
-                                ${(player.exp || 0).toLocaleString()}
-                            </td>
-                        </tr>
-                    `;
-                    tbody.insertAdjacentHTML
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-mono ${rankClass}">
+                            ${
