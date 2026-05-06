@@ -7,100 +7,124 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0d0d0f; color: #e2e8f0; font-family: sans-serif; }
+        body { 
+            background-color: #0d0d0f; 
+            color: #e2e8f0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: radial-gradient(circle at center, #1a1a2e 0%, #0d0d0f 100%);
+            min-height: 100vh;
+        }
         .retro-font { font-family: 'Press Start 2P', cursive; }
-        .gold-glow { text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+        .gold-glow { text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+        .table-container {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+        }
         tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
+        tr:hover { background-color: rgba(251, 191, 36, 0.05); }
+        
+        /* Custom scrollbar for that classic look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0d0d0f; }
+        ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 4px; }
     </style>
 </head>
-<body class="p-6 md:p-12">
+<body class="p-4 md:p-12">
 
     <div class="max-w-4xl mx-auto">
         <header class="text-center mb-10">
-            <h1 class="retro-font text-2xl text-yellow-500 mb-2 gold-glow">HALL OF FAME</h1>
-            <p class="text-gray-500 text-sm tracking-widest">MIRAGE ONLINE CLASSIC</p>
+            <h1 class="retro-font text-2xl md:text-3xl text-yellow-500 mb-4 gold-glow">
+                HALL OF FAME
+            </h1>
+            <div class="flex items-center justify-center space-x-4">
+                <span class="h-px w-12 bg-yellow-900"></span>
+                <p class="text-gray-500 text-xs tracking-[0.3em] uppercase">Mirage Online Classic</p>
+                <span class="h-px w-12 bg-yellow-900"></span>
+            </div>
         </header>
 
-        <div class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden shadow-2xl">
+        <div class="table-container border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
             <div id="status-message" class="p-20 text-center">
-                <p class="retro-font text-xs animate-pulse text-yellow-600">Accessing Game Database...</p>
+                <div class="inline-block animate-spin mb-4">
+                    <svg class="w-8 h-8 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <p class="retro-font text-[10px] text-yellow-600 tracking-widest">Querying Realm Data...</p>
             </div>
 
             <table id="leaderboard-table" class="w-full text-left hidden">
-                <thead class="bg-gray-800 text-yellow-500 text-xs uppercase">
+                <thead class="bg-gray-800/50 text-yellow-500 text-[10px] uppercase tracking-wider">
                     <tr>
-                        <th class="px-6 py-4">Rank</th>
-                        <th class="px-6 py-4">Adventurer</th>
-                        <th class="px-6 py-4">Level</th>
-                        <th class="px-6 py-4 text-right">Experience</th>
+                        <th class="px-6 py-5 font-bold">Rank</th>
+                        <th class="px-6 py-5 font-bold">Adventurer</th>
+                        <th class="px-6 py-5 font-bold">Level</th>
+                        <th class="px-6 py-5 font-bold text-right">Experience</th>
                     </tr>
                 </thead>
                 <tbody id="leaderboard-body" class="text-sm">
                     </tbody>
             </table>
         </div>
+
+        <footer class="mt-8 text-center">
+            <p class="text-gray-600 text-[10px] uppercase tracking-tighter">
+                Live data synced from play.mirageonlineclassic.com
+            </p>
+        </footer>
     </div>
 
     <script>
-        // Using a CORS proxy to allow the browser to fetch the JSON from your game server
+        // Using a different proxy approach (Corsproxy.io is often faster for direct GETs)
         const TARGET_URL = 'https://play.mirageonlineclassic.com/leaderboard.json';
-        const PROXY_URL = 'https://api.allorigins.win/get?url=' + encodeURIComponent(TARGET_URL);
+        const PROXY_URL = 'https://corsproxy.io/?' + encodeURIComponent(TARGET_URL);
 
-        async function loadData() {
+        async function loadLeaderboard() {
             const status = document.getElementById('status-message');
             const table = document.getElementById('leaderboard-table');
             const tbody = document.getElementById('leaderboard-body');
 
             try {
                 const response = await fetch(PROXY_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
                 
-                const wrapper = await response.json();
-                // AllOrigins wraps the result in a 'contents' string, so we parse it
-                const data = JSON.parse(wrapper.contents);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
-                // Debug: This helps us see the exact keys in your JSON (n, v, level, etc.)
-                console.log("Leaderboard Data Loaded:", data);
-
-                // Sort by level descending
+                const data = await response.json();
+                
+                // Sort by level (assuming key is 'level')
+                // If your JSON uses 'lv' or 'Level', change this key.
                 data.sort((a, b) => (b.level || 0) - (a.level || 0));
 
                 tbody.innerHTML = '';
+                
                 data.forEach((player, index) => {
+                    const isTopThree = index < 3;
+                    const rankColor = index === 0 ? 'text-yellow-400' : 
+                                    index === 1 ? 'text-gray-300' : 
+                                    index === 2 ? 'text-orange-500' : 'text-gray-600';
+
                     const row = `
-                        <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                            <td class="px-6 py-4 font-mono ${index < 3 ? 'text-yellow-500' : 'text-gray-500'}">
-                                #${index + 1}
-                            </td>
-                            <td class="px-6 py-4 font-bold text-gray-200">
-                                ${player.name || player.username || 'Unknown'}
+                        <tr class="border-b border-gray-800/50 transition-all">
+                            <td class="px-6 py-4 font-mono font-bold ${rankColor}">
+                                ${isTopThree ? '★' : ''} #${index + 1}
                             </td>
                             <td class="px-6 py-4">
-                                <span class="bg-blue-900/30 text-blue-400 border border-blue-800 px-2 py-0.5 rounded text-xs">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-gray-100">${player.name || player.username || 'Unknown'}</span>
+                                    <span class="text-[10px] uppercase text-gray-500 tracking-tighter italic">${player.profession || 'Player'}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="bg-gray-800 text-yellow-500 border border-yellow-900/50 px-3 py-1 rounded-full text-xs font-bold">
                                     Lv. ${player.level || 0}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-right font-mono text-gray-400">
+                            <td class="px-6 py-4 text-right font-mono text-gray-400 text-xs">
                                 ${(player.exp || 0).toLocaleString()}
                             </td>
                         </tr>
                     `;
-                    tbody.insertAdjacentHTML('beforeend', row);
-                });
-
-                status.classList.add('hidden');
-                table.classList.remove('hidden');
-
-            } catch (error) {
-                console.error("Fetch Error:", error);
-                status.innerHTML = `
-                    <p class="text-red-500 retro-font text-xs">Error: Connection Failed</p>
-                    <p class="text-gray-600 text-xs mt-4">Check console for details</p>
-                `;
-            }
-        }
-
-        loadData();
-    </script>
-</body>
-</html>
+                    tbody.insertAdjacentHTML
