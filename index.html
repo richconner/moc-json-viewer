@@ -1,120 +1,473 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOC Leaderboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #0d0d0f; color: #e2e8f0; font-family: sans-serif; }
-        .retro-font { font-family: 'Press Start 2P', cursive; }
-        .gold-glow { text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
-        .moc-border { border: 1px solid #27272a; }
-        .loading-dot { animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mirage Online Classic — Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:        #c9a227;
+    --gold-light:  #e8c84a;
+    --gold-dim:    #7a5f10;
+    --parchment:   #f4e8c1;
+    --parchment-dk:#d6c48a;
+    --ink:         #1a1008;
+    --ink-mid:     #3b2a12;
+    --ink-faded:   #6b4f28;
+    --blood:       #8b1a1a;
+    --bg:          #0d0a04;
+    --bg2:         #120e06;
+    --panel:       #1c1509;
+    --panel2:      #231b0c;
+    --border:      #3d2e10;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--parchment);
+    font-family: 'IM Fell English', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,162,39,0.06) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,162,39,0.03) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,162,39,0.02) 40px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    z-index: 1;
+  }
+
+  .crown {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.4rem;
+    filter: drop-shadow(0 0 12px rgba(201,162,39,0.7));
+    animation: floatCrown 3s ease-in-out infinite;
+  }
+  @keyframes floatCrown {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+  }
+
+  .game-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 5vw, 3rem);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dim) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+
+  .subtitle {
+    font-style: italic;
+    color: var(--gold-dim);
+    font-size: 1rem;
+    margin-top: 0.4rem;
+    letter-spacing: 0.06em;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem auto 0;
+    max-width: 500px;
+    color: var(--gold-dim);
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  }
+
+  .tabs-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(13,10,4,0.96);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(6px);
+    padding: 0.75rem 1rem;
+  }
+
+  .dropdown-wrap {
+    position: relative;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .dropdown-wrap select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--panel2);
+    border: 1px solid var(--gold-dim);
+    color: var(--parchment);
+    font-family: 'Cinzel', serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 0.65rem 2.5rem 0.65rem 1rem;
+    border-radius: 3px;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 0 12px rgba(201,162,39,0.1);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .dropdown-wrap select:focus,
+  .dropdown-wrap select:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 18px rgba(201,162,39,0.25);
+  }
+
+  .dropdown-wrap select option {
+    background: var(--panel2);
+    color: var(--parchment);
+    font-family: sans-serif;
+  }
+
+  .dropdown-arrow {
+    position: absolute;
+    right: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .state-panel {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--ink-faded);
+    font-style: italic;
+  }
+
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin: 0 auto 1.2rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .section-count {
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--ink-faded);
+  }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  .lb-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--panel);
+    box-shadow: 0 0 0 1px rgba(201,162,39,0.05), 0 4px 32px rgba(0,0,0,0.5);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+
+  thead th {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    padding: 0.8rem 1rem;
+    text-align: left;
+    background: var(--panel2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th:first-child { text-align: center; width: 56px; }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(61,46,16,0.4);
+    transition: background 0.15s;
+    animation: rowFadeIn 0.4s ease both;
+  }
+  @keyframes rowFadeIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  tbody tr:hover { background: rgba(201,162,39,0.05); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(1) { background: rgba(201,162,39,0.07); }
+  tbody tr:nth-child(2) { background: rgba(170,180,190,0.04); }
+  tbody tr:nth-child(3) { background: rgba(181,101,29,0.05); }
+
+  td { padding: 0.75rem 1rem; color: var(--parchment-dk); white-space: nowrap; }
+
+  .rank-cell { text-align: center; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1rem; }
+  .rank-medal { font-size: 1.2rem; }
+
+  .name-cell { color: var(--parchment); font-weight: bold; font-size: 0.97rem; }
+  tr:nth-child(1) .name-cell { color: var(--gold-light); }
+  tr:nth-child(2) .name-cell { color: #d0d8e0; }
+  tr:nth-child(3) .name-cell { color: #d4956a; }
+
+  .num-cell { font-family: 'Cinzel', serif; font-variant-numeric: tabular-nums; font-size: 0.88rem; color: var(--gold-dim); }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+  .data-card { background: var(--panel); border: 1px solid var(--border); border-radius: 3px; padding: 1rem 1.2rem; animation: rowFadeIn 0.4s ease both; }
+  .data-card h3 { font-family: 'Cinzel', serif; font-size: 0.88rem; letter-spacing: 0.08em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 0.5rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .data-card .kv { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; }
+  .data-card .kv-key { color: var(--ink-faded); font-style: italic; font-size: 0.85rem; }
+  .data-card .kv-val { color: var(--parchment); font-family: 'Cinzel', serif; font-size: 0.85rem; }
+
+  .search-wrap { margin-bottom: 1.2rem; position: relative; }
+  .search-wrap input {
+    width: 100%;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--parchment);
+    font-family: 'IM Fell English', serif;
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem 0.6rem 2.6rem;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--gold-dim); }
+  .search-wrap input::placeholder { color: var(--ink-faded); font-style: italic; }
+  .search-icon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--ink-faded); pointer-events: none; }
+
+  .meta-bar { text-align: right; font-style: italic; font-size: 0.78rem; color: var(--ink-faded); margin-top: 1.5rem; }
+
+  .error-box { border: 1px solid var(--blood); background: rgba(139,26,26,0.1); border-radius: 3px; padding: 1.5rem; color: #e87070; font-style: italic; font-size: 0.95rem; text-align: center; }
+
+  @media (max-width: 600px) {
+    .tabs { justify-content: flex-start; }
+    td, th { padding: 0.6rem 0.7rem; font-size: 0.82rem; }
+  }
+</style>
 </head>
-<body class="p-4 md:p-10">
+<body>
 
-    <div class="max-w-3xl mx-auto">
-        <div class="text-center mb-8">
-            <h1 class="retro-font text-xl text-yellow-500 gold-glow italic">LEADERBOARD</h1>
-        </div>
+<header>
+  <span class="crown">⚔️</span>
+  <h1 class="game-title">Mirage Online Classic</h1>
+  <p class="subtitle">Hall of Champions &amp; Records</p>
+  <div class="divider">✦</div>
+</header>
 
-        <div class="bg-[#111113] moc-border rounded-lg overflow-hidden shadow-2xl">
-            <div id="status-box" class="p-20 text-center">
-                <div class="inline-block w-8 h-8 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p class="retro-font text-[10px] text-zinc-500 uppercase tracking-[0.2em]">
-                    Reading Ledger<span class="loading-dot">...</span>
-                </p>
-                <div id="retry-btn" class="hidden mt-6">
-                    <button onclick="fetchData()" class="px-4 py-2 bg-yellow-600 text-black text-[10px] retro-font hover:bg-yellow-500 transition">
-                        Force Manual Sync
-                    </button>
-                    <p class="text-[10px] text-zinc-600 mt-4 italic">Check Console (F12) for Network Errors</p>
-                </div>
-            </div>
+<div class="tabs-wrapper">
+  <div class="dropdown-wrap">
+    <select id="tabs" autocomplete="off">
+    </select>
+    <span class="dropdown-arrow">▾</span>
+  </div>
+</div>
 
-            <table id="leaderboard-table" class="w-full text-left hidden">
-                <thead class="bg-black text-yellow-600 text-[10px] uppercase">
-                    <tr>
-                        <th class="px-6 py-4">Rank</th>
-                        <th class="px-6 py-4">Player</th>
-                        <th class="px-6 py-4">Level</th>
-                        <th class="px-6 py-4 text-right">EXP</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboard-body" class="divide-y divide-zinc-900 text-sm italic">
-                    </tbody>
-            </table>
-        </div>
+<main id="main">
+  <div class="state-panel" id="loading">
+    <div class="spinner"></div>
+    <p>Consulting the ancient scrolls…</p>
+  </div>
+</main>
+
+<script>
+const TARGET = 'https://play.mirageonlineclassic.com/leaderboard.json';
+const MEDALS = ['🥇','🥈','🥉'];
+
+let allData    = null;
+let currentTab = null;
+let searchVal  = '';
+
+function fmt(v) {
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'number') return v.toLocaleString();
+  return String(v);
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function titleCase(s) {
+  return String(s).replace(/[_-]/g,' ').replace(/\w/g, c => c.toUpperCase());
+}
+
+// Given an array of objects, find which key is the "name" and which is the "score"
+function detectColumns(sample) {
+  const keys = Object.keys(sample);
+  // Name key = first string value
+  const nameKey = keys.find(k => typeof sample[k] === 'string') || keys[0];
+  // Score key = first number value
+  const scoreKey = keys.find(k => typeof sample[k] === 'number') || keys[1];
+  return { nameKey, scoreKey, allKeys: keys };
+}
+
+function renderTable(arr, sectionKey) {
+  if (!arr || !arr.length) return '<p style="padding:2rem;text-align:center;color:var(--ink-faded);font-style:italic">No entries found.</p>';
+
+  const { nameKey, scoreKey, allKeys } = detectColumns(arr[0]);
+
+  const filtered = searchVal
+    ? arr.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(searchVal)))
+    : arr;
+
+  if (!filtered.length) return '<p style="padding:1.5rem;color:var(--ink-faded);font-style:italic;text-align:center">No results match your search.</p>';
+
+  let html = `
+    <div class="section-header">
+      <span class="section-title">${escHtml(sectionKey)}</span>
+      <span class="section-count">${filtered.length} entries</span>
+      <span class="section-line"></span>
     </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="search-input" type="text" placeholder="Search…" value="${escHtml(searchVal)}" autocomplete="off">
+    </div>
+    <div class="lb-table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th>
+          ${allKeys.map(k => `<th>${escHtml(titleCase(k))}</th>`).join('')}
+        </tr></thead>
+        <tbody>
+  `;
 
-    <script>
-        // We use an alternative "allorigins" URL which is often more reliable
-        const TARGET_URL = 'https://play.mirageonlineclassic.com/leaderboard.json';
-        const PROXY_URL = `https://api.allorigins.win/get?url=${encodeURIComponent(TARGET_URL)}&_=${new Date().getTime()}`;
+  filtered.forEach((row, i) => {
+    const rank = i + 1;
+    const rankCell = rank <= 3
+      ? `<span class="rank-medal">${MEDALS[rank-1]}</span>`
+      : `<span style="color:var(--ink-faded)">${rank}</span>`;
 
-        // Show retry button if it takes too long
-        setTimeout(() => {
-            if (document.getElementById('leaderboard-table').classList.contains('hidden')) {
-                document.getElementById('retry-btn').classList.remove('hidden');
-            }
-        }, 5000);
+    html += `<tr style="animation-delay:${Math.min(i,30) * 0.025}s">
+      <td class="rank-cell">${rankCell}</td>
+      ${allKeys.map(k => {
+        const val = row[k];
+        const isName  = k === nameKey;
+        const isScore = k === scoreKey;
+        return `<td class="${isName ? 'name-cell' : isScore ? 'num-cell' : ''}">${escHtml(fmt(val))}</td>`;
+      }).join('')}
+    </tr>`;
+  });
 
-        async function fetchData() {
-            const table = document.getElementById('leaderboard-table');
-            const statusBox = document.getElementById('status-box');
-            const tbody = document.getElementById('leaderboard-body');
+  html += '</tbody></table></div>';
+  return html;
+}
 
-            try {
-                console.log("Attempting to fetch from:", PROXY_URL);
-                const response = await fetch(PROXY_URL);
-                
-                if (!response.ok) throw new Error("Proxy connection failed.");
-                
-                const wrapper = await response.json();
-                
-                // Important: AllOrigins returns the data as a string in .contents
-                const data = JSON.parse(wrapper.contents);
-                console.log("Data successfully parsed:", data);
+function renderSection(key, data) {
+  // Array of objects — the main case for this game's JSON
+  if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && data[0] !== null) {
+    return renderTable(data, key);
+  }
+  // Fallback: plain value
+  return `<p style="padding:1rem;color:var(--parchment-dk)">${escHtml(fmt(data))}</p>`;
+}
 
-                // Sort by level (highest to lowest)
-                data.sort((a, b) => (b.level || 0) - (a.level || 0));
+function buildTabs(data) {
+  const sel = document.getElementById('tabs');
+  sel.innerHTML = Object.keys(data).map(k =>
+    `<option value="${escHtml(k)}"${k === currentTab ? ' selected' : ''}>${escHtml(k)}</option>`
+  ).join('');
 
-                tbody.innerHTML = '';
-                data.forEach((player, index) => {
-                    const row = `
-                        <tr class="hover:bg-zinc-800/30">
-                            <td class="px-6 py-4 font-mono ${index < 3 ? 'text-yellow-500 font-bold' : 'text-zinc-600'}">
-                                #${index + 1}
-                            </td>
-                            <td class="px-6 py-4 font-bold text-zinc-100">
-                                ${player.name || player.username || "Unknown"}
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-yellow-700 font-bold">LV.${player.level || 0}</span>
-                            </td>
-                            <td class="px-6 py-4 text-right font-mono text-zinc-500 text-xs uppercase">
-                                ${(player.exp || 0).toLocaleString()}
-                            </td>
-                        </tr>
-                    `;
-                    tbody.insertAdjacentHTML('beforeend', row);
-                });
+  sel.onchange = () => {
+    searchVal  = '';
+    currentTab = sel.value;
+    renderMain();
+  };
+}
 
-                statusBox.classList.add('hidden');
-                table.classList.remove('hidden');
+function renderMain() {
+  const main = document.getElementById('main');
+  main.innerHTML = renderSection(currentTab, allData[currentTab]);
+  main.innerHTML += `<p class="meta-bar">Live data from play.mirageonlineclassic.com · ${new Date().toLocaleTimeString()}</p>`;
+  const inp = document.getElementById('search-input');
+  if (inp) {
+    inp.addEventListener('input', e => {
+      searchVal = e.target.value.toLowerCase().trim();
+      renderMain();
+      // Restore focus & cursor
+      const newInp = document.getElementById('search-input');
+      if (newInp) { newInp.focus(); newInp.setSelectionRange(newInp.value.length, newInp.value.length); }
+    });
+  }
+}
 
-            } catch (err) {
-                console.error("Fetch error:", err);
-                alert("Could not load leaderboard. This is likely due to a CORS restriction between your browser and the game server. Check the F12 console for details.");
-            }
-        }
+async function init() {
+  try {
+    const res = await fetch(TARGET);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const raw = await res.json();
 
-        // Run on start
-        fetchData();
-    </script>
+    allData = Array.isArray(raw) ? { leaderboard: raw } : raw;
+
+    const keys = Object.keys(allData);
+    if (!keys.length) throw new Error('No leaderboard data found.');
+
+    currentTab = keys[0];
+    buildTabs(allData);
+    renderMain();
+  } catch (err) {
+    document.getElementById('main').innerHTML = `
+      <div class="error-box">
+        ⚠️ Could not load leaderboard data.<br>
+        <small style="margin-top:0.5rem;display:block">${escHtml(err.message)}</small>
+      </div>
+    `;
+  }
+}
+
+init();
+</script>
 </body>
 </html>
