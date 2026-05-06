@@ -3,116 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mirage Online Classic - Leaderboard</title>
+    <title>MOC Leaderboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0a0a0c; color: #d4d4d8; font-family: 'Inter', sans-serif; }
+        body { background-color: #0d0d0f; color: #e2e8f0; font-family: sans-serif; }
         .retro-font { font-family: 'Press Start 2P', cursive; }
-        .gold-text { color: #fbbf24; text-shadow: 0 0 8px rgba(251, 191, 36, 0.3); }
-        .moc-card { background: #111114; border: 1px solid #1f1f23; }
-        tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .gold-glow { text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+        .moc-border { border: 1px solid #27272a; }
+        .loading-dot { animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
     </style>
 </head>
-<body class="p-4 md:p-12">
+<body class="p-4 md:p-10">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="retro-font text-2xl gold-text mb-2 italic">LEADERBOARD</h1>
-            <p class="text-zinc-500 text-[10px] tracking-[0.3em] uppercase font-bold">Mirage Online Classic</p>
-        </header>
-
-        <div class="moc-card rounded-xl overflow-hidden shadow-2xl">
-            <div id="status-container" class="p-16 text-center">
-                <div id="loader" class="inline-block w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p id="status-msg" class="retro-font text-[10px] text-zinc-500 uppercase tracking-widest">Reading Ledger...</p>
-            </div>
-
-            <table id="main-table" class="w-full text-left hidden">
-                <thead class="bg-black/40 text-yellow-500 text-[10px] uppercase tracking-wider font-black">
-                    <tr>
-                        <th class="px-6 py-5">Rank</th>
-                        <th class="px-6 py-5">Player</th>
-                        <th class="px-6 py-5">Level</th>
-                        <th class="px-6 py-5 text-right">Experience</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body" class="text-sm"></tbody>
-            </table>
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="retro-font text-xl text-yellow-500 gold-glow italic">LEADERBOARD</h1>
         </div>
 
-        <div id="debug-panel" class="mt-8 hidden p-4 bg-red-900/10 border border-red-900/30 rounded-lg text-xs font-mono text-red-400">
-            <p class="font-bold mb-2 uppercase">Developer Debug Log:</p>
-            <div id="debug-content"></div>
+        <div class="bg-[#111113] moc-border rounded-lg overflow-hidden shadow-2xl">
+            <div id="status-box" class="p-20 text-center">
+                <div class="inline-block w-8 h-8 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="retro-font text-[10px] text-zinc-500 uppercase tracking-[0.2em]">
+                    Reading Ledger<span class="loading-dot">...</span>
+                </p>
+                <div id="retry-btn" class="hidden mt-6">
+                    <button onclick="fetchData()" class="px-4 py-2 bg-yellow-600 text-black text-[10px] retro-font hover:bg-yellow-500 transition">
+                        Force Manual Sync
+                    </button>
+                    <p class="text-[10px] text-zinc-600 mt-4 italic">Check Console (F12) for Network Errors</p>
+                </div>
+            </div>
+
+            <table id="leaderboard-table" class="w-full text-left hidden">
+                <thead class="bg-black text-yellow-600 text-[10px] uppercase">
+                    <tr>
+                        <th class="px-6 py-4">Rank</th>
+                        <th class="px-6 py-4">Player</th>
+                        <th class="px-6 py-4">Level</th>
+                        <th class="px-6 py-4 text-right">EXP</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body" class="divide-y divide-zinc-900 text-sm italic">
+                    </tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://play.mirageonlineclassic.com/leaderboard.json';
-        // Using a reliable, fast proxy with no wrapping
-        const PROXY = 'https://corsproxy.io/?' + encodeURIComponent(API_URL);
+        // We use an alternative "allorigins" URL which is often more reliable
+        const TARGET_URL = 'https://play.mirageonlineclassic.com/leaderboard.json';
+        const PROXY_URL = `https://api.allorigins.win/get?url=${encodeURIComponent(TARGET_URL)}&_=${new Date().getTime()}`;
 
-        async function init() {
-            const status = document.getElementById('status-msg');
-            const debugPanel = document.getElementById('debug-panel');
-            const debugContent = document.getElementById('debug-content');
+        // Show retry button if it takes too long
+        setTimeout(() => {
+            if (document.getElementById('leaderboard-table').classList.contains('hidden')) {
+                document.getElementById('retry-btn').classList.remove('hidden');
+            }
+        }, 5000);
+
+        async function fetchData() {
+            const table = document.getElementById('leaderboard-table');
+            const statusBox = document.getElementById('status-box');
+            const tbody = document.getElementById('leaderboard-body');
 
             try {
-                const response = await fetch(PROXY);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                console.log("Attempting to fetch from:", PROXY_URL);
+                const response = await fetch(PROXY_URL);
                 
-                const data = await response.json();
+                if (!response.ok) throw new Error("Proxy connection failed.");
                 
-                // DATA CLEANING: Handle different JSON structures automatically
-                let players = Array.isArray(data) ? data : (data.players || Object.values(data));
+                const wrapper = await response.json();
                 
-                // If the data is empty or malformed
-                if (!players || players.length === 0) {
-                    throw new Error("JSON loaded, but no player array found.");
-                }
+                // Important: AllOrigins returns the data as a string in .contents
+                const data = JSON.parse(wrapper.contents);
+                console.log("Data successfully parsed:", data);
 
-                render(players);
+                // Sort by level (highest to lowest)
+                data.sort((a, b) => (b.level || 0) - (a.level || 0));
+
+                tbody.innerHTML = '';
+                data.forEach((player, index) => {
+                    const row = `
+                        <tr class="hover:bg-zinc-800/30">
+                            <td class="px-6 py-4 font-mono ${index < 3 ? 'text-yellow-500 font-bold' : 'text-zinc-600'}">
+                                #${index + 1}
+                            </td>
+                            <td class="px-6 py-4 font-bold text-zinc-100">
+                                ${player.name || player.username || "Unknown"}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-yellow-700 font-bold">LV.${player.level || 0}</span>
+                            </td>
+                            <td class="px-6 py-4 text-right font-mono text-zinc-500 text-xs uppercase">
+                                ${(player.exp || 0).toLocaleString()}
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+
+                statusBox.classList.add('hidden');
+                table.classList.remove('hidden');
 
             } catch (err) {
-                console.error(err);
-                document.getElementById('loader').classList.add('hidden');
-                status.innerText = "FAILED TO MAP DATA";
-                status.classList.add('text-red-500');
-                
-                debugPanel.classList.remove('hidden');
-                debugContent.innerText = `Error: ${err.message}\nCheck if the JSON structure has changed.`;
+                console.error("Fetch error:", err);
+                alert("Could not load leaderboard. This is likely due to a CORS restriction between your browser and the game server. Check the F12 console for details.");
             }
         }
 
-        function render(players) {
-            const tbody = document.getElementById('table-body');
-            const table = document.getElementById('main-table');
-            const container = document.getElementById('status-container');
-
-            // Find property names dynamically (case-insensitive)
-            // This prevents "Empty Table" if your keys are "Name" instead of "name"
-            const getVal = (obj, keys) => {
-                const found = Object.keys(obj).find(k => keys.includes(k.toLowerCase()));
-                return found ? obj[found] : null;
-            };
-
-            // Sort by Level or Exp
-            players.sort((a, b) => {
-                const lvA = getVal(a, ['level', 'lv', 'l']) || 0;
-                const lvB = getVal(b, ['level', 'lv', 'l']) || 0;
-                return lvB - lvA;
-            });
-
-            tbody.innerHTML = '';
-            players.forEach((p, i) => {
-                const name = getVal(p, ['name', 'username', 'n', 'player']) || 'Unknown';
-                const level = getVal(p, ['level', 'lv', 'l']) || 0;
-                const exp = getVal(p, ['exp', 'experience', 'v', 'xp']) || 0;
-
-                const row = `
-                    <tr class="border-b border-white/5 hover:bg-yellow-500/5 transition-colors">
-                        <td class="px-6 py-4 font-mono ${i < 3 ? 'text-yellow-500 font-bold' : 'text-zinc-600'}">
-                            #${(i + 1).toString().padStart(2, '0')}
-                        </td>
-                        <td class="px-6 py-4 font-bold text-zinc-200">${name}</td>
-                        <td class="px-6 py-4 text-yellow-600 font-mono">
+        // Run on start
+        fetchData();
+    </script>
+</body>
+</html>
