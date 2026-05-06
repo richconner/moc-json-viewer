@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirage Online Classic - Hall of Fame</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0a0a0c;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .retro-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+        .gold-glow {
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #fbbf24;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="max-w-5xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="retro-font text-2xl md:text-4xl text-yellow-500 mb-4 gold-glow">
+                LEADERBOARD
+            </h1>
+            <p class="text-gray-400 italic">Top adventurers of Mirage Online Classic</p>
+            <div class="h-1 w-32 bg-yellow-600 mx-auto mt-4 rounded-full"></div>
+        </header>
+
+        <div id="top-three" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            </div>
+
+        <div class="bg-gray-900 rounded-lg overflow-hidden shadow-2xl border border-gray-800">
+            <div id="loading" class="flex flex-col items-center justify-center p-20">
+                <div class="loading-spinner mb-4"></div>
+                <p class="retro-font text-xs">
