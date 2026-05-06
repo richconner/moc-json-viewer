@@ -3,108 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mirage Online Classic - Leaderboard</title>
+    <title>Mirage Online Classic - Global Rankings</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #0b0b0e;
-            --panel-bg: #16171d;
-            --accent: #ffcc00;
-        }
         body { 
-            background-color: var(--bg-color); 
-            color: #d1d5db; 
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #09090b; 
+            color: #f4f4f5; 
+            font-family: ui-sans-serif, system-ui, sans-serif;
         }
-        .retro-text { font-family: 'Press Start 2P', cursive; }
-        .gold-glow { text-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
-        .border-gold { border-color: rgba(255, 204, 0, 0.2); }
+        .retro-font { font-family: 'Press Start 2P', cursive; }
+        .gold-border { border-color: #ca8a04; }
+        .row-hover:hover { background-color: rgba(250, 204, 21, 0.05); }
         
-        /* Custom Table Styling */
-        .moc-table thead { background: rgba(255, 255, 255, 0.03); }
-        .moc-table tr { border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s; }
-        .moc-table tr:hover { background: rgba(255, 204, 0, 0.03); }
+        /* Custom scrollbar for a polished look */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ca8a04; }
     </style>
 </head>
-<body class="min-h-screen p-4 sm:p-8">
+<body class="p-4 sm:p-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-black min-h-screen">
 
     <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-12">
-            <h1 class="retro-text text-xl md:text-3xl text-yellow-500 mb-4 gold-glow italic">
-                LEADERBOARD
+        <div class="text-center mb-10">
+            <h1 class="retro-font text-2xl md:text-3xl text-yellow-500 mb-3 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]">
+                HALL OF FAME
             </h1>
-            <p class="text-gray-500 text-xs tracking-widest uppercase">Official Rankings • Mirage Online Classic</p>
+            <p class="text-zinc-500 text-[10px] uppercase tracking-[0.4em]">Mirage Online Classic Rankings</p>
         </div>
 
-        <div class="bg-[#16171d] rounded-xl border border-gray-800 shadow-2xl overflow-hidden">
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-sm">
             
-            <div id="loader" class="p-20 text-center">
-                <div class="inline-block w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p class="retro-text text-[10px] text-gray-500">Fetching Player Data...</p>
+            <div id="loading-overlay" class="py-24 text-center">
+                <div class="inline-block w-10 h-10 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="retro-font text-[10px] text-zinc-600">Connecting to Game Server...</p>
             </div>
 
-            <div id="error-box" class="hidden p-10 text-center">
-                <p class="text-red-400 mb-4">Failed to connect to play.mirageonlineclassic.com</p>
-                <button onclick="window.location.reload()" class="px-6 py-2 bg-yellow-600 text-black font-bold rounded hover:bg-yellow-500 transition">RETRY CONNECTION</button>
+            <div id="error-display" class="hidden py-20 text-center px-6">
+                <p class="text-red-500 font-bold mb-2">Access Denied</p>
+                <p class="text-zinc-400 text-sm mb-6">The game server is preventing this external site from reading the leaderboard data (CORS Error).</p>
+                <button onclick="location.reload()" class="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs uppercase transition rounded-lg border border-zinc-700">Try Again</button>
             </div>
 
-            <table id="leaderboard-table" class="w-full text-left hidden moc-table">
-                <thead>
-                    <tr class="text-yellow-500 text-[10px] uppercase tracking-wider font-bold">
-                        <th class="px-6 py-4"># Rank</th>
-                        <th class="px-6 py-4">Adventurer</th>
-                        <th class="px-6 py-4">Level</th>
-                        <th class="px-6 py-4 text-right">EXP</th>
+            <table id="leaderboard-table" class="w-full text-left hidden">
+                <thead class="bg-zinc-950/50 text-yellow-600 text-[10px] uppercase tracking-widest font-black">
+                    <tr>
+                        <th class="px-6 py-5">Rank</th>
+                        <th class="px-6 py-5">Adventurer</th>
+                        <th class="px-6 py-5">Level</th>
+                        <th class="px-6 py-5 text-right">Experience</th>
                     </tr>
                 </thead>
-                <tbody id="leaderboard-body" class="text-sm">
+                <tbody id="leaderboard-content" class="divide-y divide-zinc-800/50 text-sm">
                     </tbody>
             </table>
         </div>
 
-        <div class="mt-6 text-center">
-            <a href="https://play.mirageonlineclassic.com" class="text-gray-600 hover:text-yellow-500 text-xs transition uppercase tracking-tighter">
-                Back to World Designer Tools
-            </a>
+        <div class="mt-8 text-center flex flex-col items-center gap-4">
+            <div class="h-px w-24 bg-zinc-800"></div>
+            <p class="text-zinc-600 text-[10px] uppercase">World Designer: Data Live Sync</p>
         </div>
     </div>
 
     <script>
         /**
-         * DEVELOPER NOTE: 
-         * Using a 'Cloudflare Worker' style proxy to bypass local browser CORS blocks.
+         * We use AllOrigins as a bridge. 
+         * It fetches your JSON server-side and sends it back with CORS enabled.
          */
-        const DATA_URL = 'https://play.mirageonlineclassic.com/leaderboard.json';
-        const PROXY = 'https://api.allorigins.win/get?url=' + encodeURIComponent(DATA_URL);
-
-        async function initLeaderboard() {
-            const table = document.getElementById('leaderboard-table');
-            const loader = document.getElementById('loader');
-            const errorBox = document.getElementById('error-box');
-            const tbody = document.getElementById('leaderboard-body');
-
-            try {
-                const response = await fetch(PROXY);
-                if (!response.ok) throw new Error('Proxy unreachable');
-                
-                const wrapper = await response.json();
-                // Extracting the actual JSON data from the proxy wrapper
-                const players = JSON.parse(wrapper.contents);
-
-                // Sort by level (highest first)
-                players.sort((a, b) => (b.level || 0) - (a.level || 0));
-
-                // Clear and build rows
-                tbody.innerHTML = '';
-                players.forEach((player, index) => {
-                    const rank = index + 1;
-                    const row = document.createElement('tr');
-                    
-                    // Formatting columns
-                    const rankClass = rank === 1 ? 'text-yellow-400 font-bold' : (rank <= 3 ? 'text-gray-300' : 'text-gray-600');
-                    const expDisplay = player.exp ? Number(player.exp).toLocaleString() : '0';
-
-                    row.innerHTML = `
-                        <td class="px-6 py-4 font-mono ${rankClass}">
-                            ${
+        const JSON_URL = 'https://play.mirageonlineclassic.com/leaderboard.json';
+        const PROXY_URL = `
